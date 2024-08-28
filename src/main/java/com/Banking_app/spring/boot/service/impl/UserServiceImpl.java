@@ -2,21 +2,23 @@ package com.Banking_app.spring.boot.service.impl;
 
 import com.Banking_app.spring.boot.dto.AccountInfo;
 import com.Banking_app.spring.boot.dto.BankResponse;
+import com.Banking_app.spring.boot.dto.EmailDetails;
 import com.Banking_app.spring.boot.dto.UserRequest;
 import com.Banking_app.spring.boot.entity.User;
 import com.Banking_app.spring.boot.repository.UserRepository;
 import com.Banking_app.spring.boot.utils.AccountUtils;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 
 @Service
-@Transactional
 public class UserServiceImpl implements UserService {
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    EmailService emailService;
 
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
@@ -49,6 +51,14 @@ public class UserServiceImpl implements UserService {
                 .build();
 
             User savedUser = userRepository.save(newUser);
+            //send email alert
+        EmailDetails emailDetails = EmailDetails.builder()
+                .recipient(savedUser.getEmail())
+                .subject("ACCOUNT CREATION")
+                .messageBody(("Congratulations! Your Account has been Successfully Created.\nYour Account Details : \n " +
+                        "Account Name : " + savedUser.getFirstName() + " " + savedUser.getLastName() + " " + savedUser.getOtherName() + " " + "\nAccount Number : " + savedUser.getAccountNumber()))
+                .build();
+        emailService.sendEmailAlert(emailDetails);
             return BankResponse.builder()
                     .responseCode(AccountUtils.ACCOUNT_CREATION_MESSAGE)
                     .responseMessage(AccountUtils.ACCOUNT_CREATION_MESSAGE)
