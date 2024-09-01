@@ -1,9 +1,6 @@
 package com.Banking_app.spring.boot.service.impl;
 
-import com.Banking_app.spring.boot.dto.BankResponse;
-import com.Banking_app.spring.boot.dto.CreditDebitRequest;
-import com.Banking_app.spring.boot.dto.EnquiryRequest;
-import com.Banking_app.spring.boot.dto.UserRequest;
+import com.Banking_app.spring.boot.dto.*;
 
 public interface UserService {
     BankResponse createAccount(UserRequest userRequest);
@@ -11,4 +8,5 @@ public interface UserService {
     String nameEnquiry(EnquiryRequest request);
     BankResponse creditAccount(CreditDebitRequest request);
     BankResponse debitAccount(CreditDebitRequest request);
+    BankResponse transfer(TransferRequest request);
 }

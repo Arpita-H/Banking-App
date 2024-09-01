@@ -8,7 +8,7 @@ import java.time.Year;
 public class AccountUtils {
 
     public static final String ACCOUNT_EXISTS_CODE = "001";
-    public  static final String ACCOUNT_EXISTS_MESSAGE = "This user already has Created";
+    public  static final String ACCOUNT_EXISTS_MESSAGE = "This user already has an account Created!";
 
     public static final String ACCOUNT_CREATION_SUCCESS = "002";
     public static final String ACCOUNT_CREATION_MESSAGE = "Account has been successfully created!";
@@ -27,6 +27,10 @@ public class AccountUtils {
 
     public static final String ACCOUNT_DEBITED_SUCCESS = "007";
     public static final String ACCOUNT_DEBITED_MESSAGE = "Account has been successfully Debited";
+
+    public static final String TRANSFER_SUCCESSFUL_CODE = "008";
+    public static final String TRANSFER_SUCCESSFUL_MESSAGE = "Transfer Successful";
+
     public static String generateAccountNumber() {
 
         /**
