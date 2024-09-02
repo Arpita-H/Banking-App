@@ -181,7 +181,7 @@ public class UserServiceImpl implements UserService {
         }
 
         User sourceAccountUser = userRepository.findByAccountNumber(request.getSourceAccountNumber());
-        if (request.getAmount().compareTo(sourceAccountUser.getAccountBalance()) > 0) {     //Changed < 0 to > 0
+        if (request.getAmount().compareTo(sourceAccountUser.getAccountBalance()) > 0) {
             return BankResponse.builder()
                     .responseCode(AccountUtils.INSUFFICIENT_BALANCE_CODE)
                     .responseMessage(AccountUtils.INSUFFICIENT_BALANCE_MESSAGE)
