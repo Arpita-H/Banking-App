@@ -1,5 +1,4 @@
 package com.Banking_app.spring.boot.service.impl;
-
 import com.Banking_app.spring.boot.dto.*;
 import com.Banking_app.spring.boot.entity.User;
 import com.Banking_app.spring.boot.repository.UserRepository;
@@ -57,8 +56,8 @@ public class UserServiceImpl implements UserService {
                 .messageBody(("Congratulations! Your Account has been Successfully Created.\nYour Account Details : \n " +
                         "Account Name : " + savedUser.getFirstName() + " " + savedUser.getLastName() + " " + savedUser.getOtherName() + " " + "\nAccount Number : " + savedUser.getAccountNumber()))
                 .build();
-
         emailService.sendEmailAlert(emailDetails);
+
         return BankResponse.builder()
                 .responseCode(AccountUtils.ACCOUNT_CREATION_MESSAGE)
                 .responseMessage(AccountUtils.ACCOUNT_CREATION_MESSAGE)
@@ -168,7 +167,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public BankResponse transfer(TransferRequest request) {
         //get the account to debit(check if it exist)
-        //check if the amount i'm debiting is not more than the current balance
+        //check if the amount I'm debiting is not more than the current balance
         //debit the account
         //get the account to credit
         //credit the account
@@ -182,7 +181,7 @@ public class UserServiceImpl implements UserService {
         }
 
         User sourceAccountUser = userRepository.findByAccountNumber(request.getSourceAccountNumber());
-        if (request.getAmount().compareTo(sourceAccountUser.getAccountBalance()) < 0) {
+        if (request.getAmount().compareTo(sourceAccountUser.getAccountBalance()) > 0) {     //Changed < 0 to > 0
             return BankResponse.builder()
                     .responseCode(AccountUtils.INSUFFICIENT_BALANCE_CODE)
                     .responseMessage(AccountUtils.INSUFFICIENT_BALANCE_MESSAGE)
@@ -203,7 +202,6 @@ public class UserServiceImpl implements UserService {
 
         User destinationAccountUser = userRepository.findByAccountNumber(request.getDestinationAccountNumber());
         destinationAccountUser.setAccountBalance(destinationAccountUser.getAccountBalance().add(request.getAmount()));
-//        String recipientUsername = destinationAccountUser.getFirstName() + " " + destinationAccountUser.getLastName() + " "  + destinationAccountUser.getOtherName();
         userRepository.save(destinationAccountUser);
 
         EmailDetails creditAlert = EmailDetails.builder()
@@ -212,7 +210,7 @@ public class UserServiceImpl implements UserService {
                 .messageBody("The sum of" + request.getAmount() + " has been sent to your account from "  + sourceUsername + "Your current balance is " + sourceAccountUser.getAccountBalance())
                 .build();
 
-        emailService.sendEmailAlert(debitAlert);
+        emailService.sendEmailAlert(creditAlert);
         return BankResponse.builder()
                 .responseCode(AccountUtils.TRANSFER_SUCCESSFUL_CODE)
                 .responseMessage(AccountUtils.TRANSFER_SUCCESSFUL_MESSAGE)
