@@ -1,15 +1,23 @@
 package com.Banking_app.spring.boot.service.impl;
+
+import com.Banking_app.spring.boot.config.JwtTokenProvider;
 import com.Banking_app.spring.boot.dto.*;
 import com.Banking_app.spring.boot.entity.User;
 import com.Banking_app.spring.boot.repository.UserRepository;
 import com.Banking_app.spring.boot.utils.AccountUtils;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
 @Service
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
     @Autowired
     UserRepository userRepository;
@@ -19,6 +27,15 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     TransactionService transactionService;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
 
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
@@ -45,6 +62,7 @@ public class UserServiceImpl implements UserService {
                 .accountNumber(AccountUtils.generateAccountNumber())
                 .accountBalance(BigDecimal.ZERO)
                 .email(userRequest.getEmail())
+                .password(passwordEncoder.encode(userRequest.getPassword()))
                 .phoneNumber(userRequest.getPhoneNumber())
                 .alternativePhoneNumber(userRequest.getAlternativePhoneNumber())
                 .status("ACTIVE")
@@ -71,6 +89,60 @@ public class UserServiceImpl implements UserService {
                         .build())
                 .build();
     }
+
+    public BankResponse login(LoginDto loginDto) {
+        Authentication authentication = null;
+        authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword())
+        );
+
+        EmailDetails loginAlert = EmailDetails.builder()
+                .subject("You're logged in!")
+                .recipient((loginDto.getEmail()))
+                .messageBody("You logged into your account. If you did not initiate this request, please contact your bank")
+                .build();
+
+        emailService.sendEmailAlert(loginAlert);
+        return BankResponse.builder()
+                .responseCode("Login Success")
+                .responseMessage(jwtTokenProvider.generateToken(authentication))
+                .build();
+    }
+
+    @Override
+    public BankResponse deleteUser(String accountNumber) {
+        // Check if the account exists
+        boolean isAccountExist = userRepository.existsByAccountNumber(accountNumber);
+        if (!isAccountExist) {
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXIST_CODE)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXIST_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+
+        // Fetch the user
+        User userToDelete = userRepository.findByAccountNumber(accountNumber);
+
+        // Delete the user
+        userRepository.delete(userToDelete);
+
+        // Optionally, send a notification email to the user (if required)
+        EmailDetails deletionAlert = EmailDetails.builder()
+                .subject("Account Deletion")
+                .recipient(userToDelete.getEmail())
+                .messageBody("Your account has been successfully deleted.")
+                .build();
+
+        emailService.sendEmailAlert(deletionAlert);
+
+        return BankResponse.builder()
+                .responseCode(AccountUtils.ACCOUNT_DELETION_SUCCESS_CODE)
+                .responseMessage(AccountUtils.ACCOUNT_DELETION_SUCCESS_MESSAGE)
+                .accountInfo(null)
+                .build();
+    }
+
 
     @Override
     public BankResponse balanceEnquiry(EnquiryRequest request) {
@@ -161,8 +233,7 @@ public class UserServiceImpl implements UserService {
                     .responseMessage(AccountUtils.INSUFFICIENT_BALANCE_MESSAGE)
                     .accountInfo(null)
                     .build();
-        }
-        else {
+        } else {
             userToDebit.setAccountBalance(userToDebit.getAccountBalance().subtract(request.getAmount()));
             userRepository.save(userToDebit);
 
@@ -229,7 +300,7 @@ public class UserServiceImpl implements UserService {
         EmailDetails creditAlert = EmailDetails.builder()
                 .subject("CREDIT ALERT")
                 .recipient(sourceAccountUser.getEmail())
-                .messageBody("The sum of" + request.getAmount() + " has been sent to your account from "  + sourceUsername + "Your current balance is " + sourceAccountUser.getAccountBalance())
+                .messageBody("The sum of" + request.getAmount() + " has been sent to your account from " + sourceUsername + "Your current balance is " + sourceAccountUser.getAccountBalance())
                 .build();
 
         emailService.sendEmailAlert(creditAlert);
@@ -247,4 +318,4 @@ public class UserServiceImpl implements UserService {
                 .accountInfo(null)
                 .build();
     }
-    }
+}

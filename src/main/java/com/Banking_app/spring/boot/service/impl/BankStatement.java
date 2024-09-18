@@ -1,5 +1,6 @@
 package com.Banking_app.spring.boot.service.impl;
 
+import com.Banking_app.spring.boot.dto.EmailDetails;
 import com.Banking_app.spring.boot.entity.Transaction;
 import com.Banking_app.spring.boot.entity.User;
 import com.Banking_app.spring.boot.repository.TransactionRepository;
@@ -27,13 +28,13 @@ public class BankStatement {
     private static final String FILE = "C:\\Java\\Banking-app\\Documents\\MyStatement.pdf";
     private TransactionRepository transactionRepository;
     private UserRepository userRepository;
+    private EmailService emailService;
 
     /**
      * retrive list of transactions within a date range given an account number
      * generate a pdf file of transactions
      * send file via email
      */
-
 
     public List<Transaction> generateStatement(String accountNumber, String startDate, String endDate) throws FileNotFoundException, DocumentException {
         LocalDate start = LocalDate.parse(startDate, DateTimeFormatter.ISO_DATE);
@@ -109,6 +110,13 @@ public class BankStatement {
         document.add(transactionsTable);
 
         document.close();
+
+        EmailDetails emailDetails = EmailDetails.builder()
+                .recipient(user.getEmail())
+                .subject("STATEMENT OF ACCOUNT")
+                .messageBody(("Kindly find your requested account statement attached!"))
+                .attachment(FILE)
+                .build();
 
         return transactionList;
     }

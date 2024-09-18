@@ -18,18 +18,46 @@ public class UserController {
     @Autowired
     UserService userService;
 
-@Operation(
-        summary = "Create New User Account",
-        description = "Creating a new user and assigning an account ID"
-)
-@ApiResponse(
-        responseCode = "201",
-        description = "Http Status 201 CREATED"
-)
+    @Operation(
+            summary = "Create New User Account",
+            description = "Creating a new user and assigning an account ID"
+    )
+    @ApiResponse(
+            responseCode = "201",
+            description = "Http Status 201 CREATED"
+    )
     @PostMapping
-    public BankResponse createAccount(@RequestBody UserRequest userRequest){
+    public BankResponse createAccount(@RequestBody UserRequest userRequest) {
         return userService.createAccount(userRequest);
     }
+
+    @Operation(
+            summary = "Login",
+            description = "User login"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Http Status 200 SUCCESS"
+    )
+    @PostMapping("/login")
+    public BankResponse login(@RequestBody LoginDto loginDto) {
+        return userService.login(loginDto);
+    }
+
+    @Operation(
+            summary = "Delete User",
+            description = "Delete user account by account number"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Http Status 200 SUCCESS"
+    )
+
+    @DeleteMapping("/delete")
+    public BankResponse deleteUser(@PathVariable String accountNumber) {
+        return userService.deleteUser(accountNumber);
+    }
+
     @Operation(
             summary = "Balance Enquiry",
             description = "Given an account number, check how much balance amount the user has"
@@ -55,6 +83,7 @@ public class UserController {
     public String nameEnquiry(@RequestBody EnquiryRequest request) {
         return userService.nameEnquiry(request);
     }
+
     @Operation(
             summary = "Credit",
             description = "Credit the amount to given account number"
@@ -65,7 +94,7 @@ public class UserController {
     )
     @PostMapping("/credit")
     public BankResponse creditAccount(@RequestBody CreditDebitRequest request) {
-        return  userService.creditAccount(request);
+        return userService.creditAccount(request);
     }
 
     @Operation(
